@@ -1,0 +1,16 @@
+## Adicionando o ".gitignore", atendendo ao requisito de repositório, requerido pelo professor responsável.
+
+# para o cache do python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# configurações de editores (VSCode/PyCharm)
+.vscode/
+.idea/
+
+# arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+
