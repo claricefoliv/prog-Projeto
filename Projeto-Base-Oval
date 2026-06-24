@@ -1,0 +1,125 @@
+import tkinter as tk
+from tkinter import ttk
+
+# quando mouse é somente pressionado
+def iniciar_figura_nova(event):
+    global figura_nova
+    # pegamos o que esta selecionado no menu do topo, escolhendo a ação
+    ferramenta_atual = tipo_figura_var.get()
+    
+    if ferramenta_atual == 'Linha':
+        # salva o tipo e cria quatro coordenadas iguais no ponto do clique (x1, y1, x2, y2)
+        figura_nova = ("linha", (event.x, event.y, event.x, event.y))
+    elif ferramenta_atual == 'Oval':
+        # para a oval é idêntico: ela começa com tamanho zero no ponto do clique
+        figura_nova = ("oval", (event.x, event.y, event.x, event.y))
+    else:
+        # se não for nenhum dos dois, só pode ser um rabisco, que é uma lista de pontos (x, y) que vamos acumulando
+        figura_nova = ("rabisco", [(event.x, event.y)])
+
+# quando mouse é movido com o botão pressionado 
+def atualizar_figura_nova(event):
+    global figura_nova
+    if not figura_nova: 
+        return
+    tipo, valores = figura_nova
+    
+    if tipo == "rabisco":
+        # no rabisco, vamos apenas guardando cada ponto novo na lista de pontos
+        valores.append((event.x, event.y))
+        figura_nova = ("rabisco", valores)
+    else: 
+        # para linha e oval, a lógica é a mesma: mantemos o ponto inicial estático (valores[0] e valores[1])
+        # e atualizamos o ponto final (valores[2] e valores[3]) com a posição atual do mouse
+        figura_nova = (tipo, (valores[0], valores[1], event.x, event.y))
+        
+    # limpa o canvas e redesenha tudo
+    desenhar()
+    desenhar_figura_nova()
+
+# quando mouse é solto e finaliza a ação de desenho da figura, salvando ela no histórico
+def incluir_figura_nova(event):
+    global figura_nova
+    # se a figura não estiver incompleta, colocamos ela no histórico definitivo
+    if figura_nova and not incompleta(figura_nova):
+        figuras.append(figura_nova)
+    desenhar()
+
+# desenha todas as figuras que já foram finalizadas e salvas na nossa lista global
+def desenhar():
+    canvas.delete("all") # apaga tudo o que está na tela antes de redesenhar
+    
+    for fig, valores in figuras:
+        if fig == "linha":
+            canvas.create_line(valores[0], valores[1], valores[2], valores[3])
+        elif fig == "oval":
+            # o Tkinter cria a oval usando a mesma lógica de caixa delimitadora (x1, y1, x2, y2)
+            canvas.create_oval(valores[0], valores[1], valores[2], valores[3])
+        else: 
+            # desenha o rabisco passando a lista de pontos acumulados
+            canvas.create_line(valores)
+
+# desenha o contorno/linha guia pontilhada enquanto estamos arrastando o mouse
+def desenhar_figura_nova():
+    if not figura_nova: 
+        return
+    
+    fig, valores = figura_nova
+    
+    if fig == "linha":
+        canvas.create_line(valores[0], valores[1], valores[2], valores[3], dash=(4, 2))
+    elif fig == "oval":
+        # desenha a borda da circunferência pontilhada enquanto o usuário arrasta
+        canvas.create_oval(valores[0], valores[1], valores[2], valores[3], dash=(4, 2))
+    else: 
+        canvas.create_line(valores, dash=(4, 2))
+
+# função de validação para não salvar cliques fantasmas ou figuras sem tamanho
+def incompleta(figura):
+    fig, valores = figura
+    if fig == "rabisco":
+        return len(valores) <= 1
+    else: 
+        # se o ponto inicial for igual ao ponto final, a linha ou oval não tem tamanho
+        return (valores[0], valores[1]) == (valores[2], valores[3])
+
+
+ # uma lista que armazena o histórico de todas as tuplas desenhadas
+figuras = []      
+# guarda a tupla da figura que está sendo feita no momento
+figura_nova = None 
+
+
+def main():
+    global canvas, tipo_figura_var
+
+    root = tk.Tk()
+    root.title("UFS Paint - Primeiro Período")
+    frame = tk.Frame(root)
+
+    paddings = {'padx': 5, 'pady': 5}
+
+    # texto indicador
+    label = ttk.Label(frame, text='Escolha a Ferramenta:')
+    label.grid(column=0, row=0, sticky=tk.W, **paddings)
+
+    # menu de seleção atualizado com a nova opção 'oval'
+    tipo_figura_var = tk.StringVar(root)
+    option_menu = ttk.OptionMenu(frame, tipo_figura_var, 'Linha', 'Linha', 'Rabisco', 'Oval')
+    option_menu.grid(column=1, row=0, sticky=tk.W, **paddings)
+
+    # área branca de base para desenhar
+    canvas = tk.Canvas(frame, bg='white', width=600, height=600)
+    canvas.grid(column=0, row=1, columnspan=2, sticky=tk.W, **paddings)
+
+    frame.pack()
+
+    # bindings que ligam os cliques e movimentos do mouse às funções correspondentes
+    canvas.bind('<ButtonPress-1>', iniciar_figura_nova)
+    canvas.bind('<B1-Motion>', atualizar_figura_nova)
+    canvas.bind('<ButtonRelease-1>', incluir_figura_nova)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
