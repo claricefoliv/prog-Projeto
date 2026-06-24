@@ -94,7 +94,7 @@ def main():
     global canvas, tipo_figura_var
 
     root = tk.Tk()
-    root.title("UFS Paint - Prog A")
+    root.title("UFS Paint - Programação A")
     frame = tk.Frame(root)
 
     paddings = {'padx': 5, 'pady': 5}
