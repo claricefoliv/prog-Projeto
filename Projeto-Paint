@@ -1,8 +1,8 @@
 import tkinter as tk
 
-def retangulo():
+def oval():
     global ferramenta
-    ferramenta = "retangulo"
+    ferramenta = "oval"
 
 def marca_inicio(event):
     global ini_x, ini_y
@@ -16,21 +16,21 @@ def atualiza_fim(event):
     fim_y = event.y
     canvas.delete("all")
 
-    if ferramenta == "retangulo":
-        canvas.create_rectangle(
+    if ferramenta == "oval":
+        canvas.create_oval(
             ini_x, ini_y, fim_x, fim_y,
             outline="black", tags="all"
         )
 
 root = tk.Tk()
 
-# cria o botão de retângulo
-bot_retagulo = tk.Button(
+# cria o botão de oval
+bot_oval = tk.Button(
     root,
-    text="RETANGULO",
-    command=retangulo
+    text="OVAL",
+    command=oval
 )
-bot_retagulo.pack()
+bot_oval.pack()
 
 canvas = tk.Canvas(
     root,
@@ -50,3 +50,4 @@ canvas.bind('<B1-Motion>', atualiza_fim)
 # canvas.bind('<ButtonRelease-1>', reset)
 
 root.mainloop()
+
