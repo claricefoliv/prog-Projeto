@@ -20,4 +20,4 @@ Antes de executar o projeto, certifique-se de ter o Python 3 instalado em seu di
 1. Baixe ou clone este repositório em sua máquina.
 2. Abra o terminal (ou prompt de comando) e navegue até a pasta do projeto:
    ```bash
-  cd caminho/para/a/pasta/do/projeto
+   cd caminho/para/a/pasta/do/projeto
