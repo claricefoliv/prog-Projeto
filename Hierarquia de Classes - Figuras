@@ -1,0 +1,30 @@
+class Figuras:
+    def __init__(self, coordenadas, cor, cor_preenchimento):
+        self.coordenadas = coordenadas  # para linha/retangulo/oval será x1, y1, x2, y2
+        self.cor = cor
+        self.cor_preenchimento = cor_preenchimento
+
+    def desenhar(self, canvas, dash=None):
+        # esse método será implementado pelas classes filhas
+        pass
+
+class Linha(Figuras):
+    def desenhar(self, canvas, dash=None):
+        x1, y1, x2, y2 = self.coordenadas
+        # o dash serve para o pontilhado do desenhar
+        return canvas.create_line(x1, y1, x2, y2, fill=self.cor, dash=dash)
+
+class Oval(Figuras):
+    def desenhar(self, canvas, dash=None):
+        x1, y1, x2, y2 = self.coordenadas
+        return canvas.create_oval(x1, y1, x2, y2, outline=self.cor, fill=self.cor_preenchimento, dash=dash)
+
+class Retangulo(Figuras):
+    def desenhar(self, canvas, dash=None):
+        x1, y1, x2, y2 = self.coordenadas
+        return canvas.create_rectangle(x1, y1, x2, y2, outline=self.cor, fill=self.cor_preenchimento, dash=dash)
+
+class Rabisco(Figuras):
+    def desenhar(self, canvas, dash=None):
+        # O rabisco recebe uma lista de pontos [(x1,y1), (x2,y2)...]
+        return canvas.create_line(self.coordenadas, fill=self.cor, dash=dash)
