@@ -21,3 +21,5 @@ Antes de executar o projeto, certifique-se de ter o Python 3 instalado em seu di
 2. Abra o terminal (ou prompt de comando) e navegue até a pasta do projeto:
    ```bash
    cd caminho/para/a/pasta/do/projeto
+## ❗​ Avisos!
+Neste projeto foi utilizado Inteligência Artificial, a versão Pro 3.5 do ecossistema Gemini. O uso desta ferramenta tem cunho educacional e não possui intenção alguma de plagiar ou falsificar os códigos do projeto.
