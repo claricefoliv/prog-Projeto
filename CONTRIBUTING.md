@@ -5,7 +5,7 @@ Etapa 2: Reestruturação em POO, modularização, comentários
 
 Iago Lucas:
 Etapa 1: Retangulo 
-Etapa 2: Reestruturação em POO, Implementação dos Polígonos na base POO
+Etapa 2: Reestruturação em POO, Implementação dos Polígonos na base POO, adição da tag da entrega 2
 
 
 Cauã:
