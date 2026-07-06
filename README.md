@@ -4,7 +4,7 @@ Este projeto tem o intuito de reproduzir um programa no modelo Paint em POO, sen
 * Clarice Lopes Fernandes de Oliveira
 * Iago Lucas Santos Marques de Souza
 * Cauã Ribeiro dos Anjos Costa
-* Lucas Rocha Cardoso
+* Luan Henrique Silva Santos 
 
 ## 🚀 O objetivo de aprendizado é:
 - Modelar um domínio com uma hierarquia de classes e polimorfismo (Orientação a Objetos).
