@@ -5,12 +5,36 @@ from tkinter import ttk
 from figuras import Linha, Oval, Retangulo, Rabisco, Poligono
 
 # quando mouse é somente pressionado
+### MUDANÇA ### Adicionada variável para guardar o polígono em construção
+poligono_em_construcao = None
+
 def iniciar_figura_nova(event):
     global figura_nova
+    ### MUDANÇA ### Adicionado global para poligono_em_construcao
+    global poligono_em_construcao
+    
     # implementando getters para pegar a ferramenta e cor selecionadas
     ferramenta_atual = tipo_figura_var.get()
     cor_atual = cor_borda_var.get()
     cor_preenchimento = cor_preenchimento_var.get() #pega a cor de preenchimento selecionada no momento
+    
+    ### MUDANÇA ### Polígono agora funciona clicando em pontos, não arrastando
+    if ferramenta_atual == 'Polígono':
+        if poligono_em_construcao is None:
+            # Primeiro clique: cria o polígono com lista de pontos
+            poligono_em_construcao = Poligono(
+                [(event.x, event.y)],  # lista com primeiro ponto
+                cor_atual,
+                cor_preenchimento
+            )
+            figura_nova = poligono_em_construcao
+        else:
+            # Próximos cliques: adiciona mais um ponto
+            poligono_em_construcao.adicionar_ponto(event.x, event.y)
+        
+        desenhar()
+        desenhar_preview_poligono()
+        return  # Sai da função, não executa o resto
     
     # criamos o objeto correto baseado na seleção, mas ainda na coordenada zero 
     if ferramenta_atual == 'Linha':
@@ -20,18 +44,19 @@ def iniciar_figura_nova(event):
         figura_nova = Oval((event.x, event.y, event.x, event.y), cor_atual, cor_preenchimento)
     elif ferramenta_atual == 'Retângulo':
         figura_nova = Retangulo((event.x, event.y, event.x, event.y), cor_atual, cor_preenchimento)
-        ## POLIGONO
-    elif ferramenta_atual == 'Polígono (Triângulo)':
-        # atendendo ao requisito de etapa 2, para ilustrar um polígono simples. fazemos um triângulo usando o clique como base
-        figura_nova = Poligono((event.x, event.y, event.x, event.y, event.x, event.y), cor_atual, cor_preenchimento)
     elif ferramenta_atual == 'Rabisco':
         figura_nova = Rabisco(([event.x, event.y]), cor_atual, cor_preenchimento)
+
 
 # quando mouse é movido com o botão pressionado 
 def atualizar_figura_nova(event):
     global figura_nova
 
     if not figura_nova: 
+        return
+    
+    ### MUDANÇA ### Polígono não usa arrastar
+    if tipo_figura_var.get() == 'Polígono':
         return
     
     ##if not isinstance(figura_nova, Rabisco):
@@ -41,10 +66,8 @@ def atualizar_figura_nova(event):
     if isinstance(figura_nova, Rabisco):
         figura_nova.coordenadas.append((event.x, event.y))
     elif isinstance(figura_nova, Poligono):
-        # atualiza os pontos dinamicamente para formar o triângulo do poligono
-        origem_x, origem_y = figura_nova.coordenadas[0], figura_nova.coordenadas[1]
-        # a escolha do ponto ao inves do _ diz respeito a origem do polígono, mantendo a base fixa e alterando o ponto superior do triângulo
-        figura_nova.coordenadas = (origem_x, origem_y, event.x, origem_y, (origem_x + event.x)//2, event.y)
+        ### MUDANÇA ### Removido - polígono agora não usa arrastar
+        pass
     else: 
         # modifica os atributos do objeto para refletir a nova posição do mouse, mantendo a origem fixa
         origem_x, origem_y = figura_nova.coordenadas[0], figura_nova.coordenadas[1]
@@ -56,9 +79,37 @@ def atualizar_figura_nova(event):
 # quando mouse é solto
 def incluir_figura_nova(event):
     global figura_nova
+    
+    ### MUDANÇA ### Polígono não salva ao soltar botão
+    if tipo_figura_var.get() == 'Polígono':
+        return
+    
     if figura_nova and not incompleta(figura_nova):
         figuras.append(figura_nova) # guardamos o objeto real na lista
     desenhar()
+
+
+### MUDANÇA ### FUNÇÃO NOVA: fecha o polígono no duplo clique
+def fechar_poligono(event):
+    """Chamado no duplo clique para fechar o polígono."""
+    global poligono_em_construcao, figura_nova
+    
+    if poligono_em_construcao is None:
+        return
+    
+    # Adiciona o último ponto (onde deu o duplo clique)
+    poligono_em_construcao.adicionar_ponto(event.x, event.y)
+    
+    # Só salva se tiver pelo menos 3 pontos
+    if len(poligono_em_construcao.coordenadas) >= 3:
+        figuras.append(poligono_em_construcao)
+    
+    # Limpa o estado para poder criar outro polígono depois
+    poligono_em_construcao = None
+    figura_nova = None
+    
+    desenhar()
+
 
 # utilizamos o polimorfismo para desenhar cada figura, chamando o método desenhar de cada objeto
 def desenhar():
@@ -72,10 +123,31 @@ def desenhar_figura_nova():
     # passamos o parâmetro dash para fazer a linha guia pontilhada, identificando que é uma figura em construção
     figura_nova.desenhar(canvas, dash=(4, 2))
 
+
+### MUDANÇA ### FUNÇÃO NOVA: mostra preview do polígono enquanto clica
+def desenhar_preview_poligono():
+    """Desenha o polígono em construção com linhas pontilhadas."""
+    if poligono_em_construcao is None:
+        return
+    
+    pontos = poligono_em_construcao.coordenadas
+    
+    # Desenha linhas entre os pontos
+    if len(pontos) > 1:
+        canvas.create_line(pontos, fill=poligono_em_construcao.cor, dash=(4, 2))
+    
+    # Desenha círculos nos pontos para visualizar onde clicou
+    for x, y in pontos:
+        canvas.create_oval(x-3, y-3, x+3, y+3, fill=poligono_em_construcao.cor)
+
+
 def incompleta(figura):
     # lógica para determinar se a figura está incompleta de sempre
     if isinstance(figura, Rabisco):
         return len(figura.coordenadas) <= 1
+    ### MUDANÇA ### Adicionado verificação para Polígono
+    elif isinstance(figura, Poligono):
+        return len(figura.coordenadas) < 3
     else: 
         return (figura.coordenadas[0], figura.coordenadas[1]) == (figura.coordenadas[2], figura.coordenadas[3])
 
@@ -100,7 +172,8 @@ def main():
 
     tipo_figura_var = tk.StringVar(root)
     ####### menu atualizado incluindo o polígono solicitado ########
-    option_menu = ttk.OptionMenu(frame, tipo_figura_var, 'Linha', 'Linha', 'Rabisco', 'Oval', 'Retângulo', 'Polígono (Triângulo)')
+    ### MUDANÇA ### Troquei 'Polígono (Triângulo)' por 'Polígono'
+    option_menu = ttk.OptionMenu(frame, tipo_figura_var, 'Linha', 'Linha', 'Rabisco', 'Oval', 'Retângulo', 'Polígono')
     option_menu.grid(column=1, row=0, sticky=tk.W, **paddings)
 
     # cor da borda
@@ -132,6 +205,9 @@ def main():
     canvas.bind('<ButtonPress-1>', iniciar_figura_nova)
     canvas.bind('<B1-Motion>', atualizar_figura_nova)
     canvas.bind('<ButtonRelease-1>', incluir_figura_nova)
+    
+    ### MUDANÇA ### Adicionado evento de duplo clique para fechar polígono
+    canvas.bind('<Double-Button-1>', fechar_poligono)
 
     root.mainloop()
 
