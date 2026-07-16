@@ -276,3 +276,11 @@ class TelaDesenho:
         # Coloca umas bolinhas nas pontas pra ficar fácil de ver os vértices
         for x, y in pontos:
             self.canvas.create_oval(x - 3, y - 3, x + 3, y + 3, fill=poligono.cor_borda)
+
+    def _ao_apagar(self, _evento) -> None:
+        """
+        Chamado quando o usuário aperta Delete ou Backspace no canvas.
+        Pede pro controlador apagar a figura que está atualmente focada.
+        """
+        if self.controlador:
+            self.controlador.apagar_figura()
