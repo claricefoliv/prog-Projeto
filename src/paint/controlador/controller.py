@@ -213,5 +213,20 @@ class ControladorDesenho:
         if self.figura_focada and self.figura_focada in self.desenho.figuras:
             self.desenho.figuras.remove(self.figura_focada)
             self.desenho.figuras.insert(0, self.figura_focada)
+
+    def apagar_figura(self):
+        """
+        Apaga a figura atualmente focada pelo usuário.
+        Chamado pela visão quando o usuário aperta a tecla Delete.
+        """
+        if self.figura_focada and self.figura_focada in self.desenho.figuras:
+            # Remove a figura do modelo
+            self.desenho.remover_figura(self.figura_focada)
+            
+            # Limpa a referência da figura focada (já que ela não existe mais)
+            self.figura_focada = None 
+            
+            # Pede para a tela se atualizar sem a figura
+            self._redesenhar()
             self._redesenhar()
 
