@@ -13,10 +13,6 @@ como reagir a clique, arraste e soltar. O controlador só guarda
 Isso elimina completamente os if/elif do controlador.
 """
 from future import annotations
-============================================================
-NOTA: Esses imports de tkinter foram adicionados aqui mas NÃO SÃO USADOS
-neste arquivo. Eles pertencem ao controller.py (onde realmente usamos
-============================================================
 from typing import TYPE_CHECKING
 
 Importamos as figuras do modelo para criar os objetos
