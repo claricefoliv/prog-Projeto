@@ -126,7 +126,7 @@ class TelaDesenho:
         menu_cor = tk.OptionMenu(
             self.frame_controles, self.var_cor_borda,
             'black', 'red', 'blue', 'green', 'orange', 'purple',
-            command=self._mudar_cor_borda
+            command=self._set_cor_borda
         )
         menu_cor.pack(side=tk.LEFT, padx=(0, 15))
 
@@ -136,7 +136,7 @@ class TelaDesenho:
         menu_preenchimento = tk.OptionMenu(
             self.frame_controles, self.var_preenchimento,
             '', 'red', 'blue', 'green', 'yellow', 'orange', 'purple',
-            command=self._mudar_preenchimento
+            command=self._set_cor_preenchimento
         )
         menu_preenchimento.pack(side=tk.LEFT)
 
