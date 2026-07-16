@@ -228,5 +228,4 @@ class ControladorDesenho:
             
             # Pede para a tela se atualizar sem a figura
             self._redesenhar()
-            self._redesenhar()
 
