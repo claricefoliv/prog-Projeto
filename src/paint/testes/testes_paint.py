@@ -3,7 +3,7 @@ import pytest
 from modelo.figuras import Linha, Oval, Retangulo, Rabisco, Poligono, Desenho
 
 class TestGeometriaFiguras:
-    """Testes focados na criação das figuras e armazenamento de coordenadas[span_2](start_span)[span_2](end_span)."""
+    """Testes focados na criação das figuras e armazenamento de coordenadas"""
 
     def test_criacao_linha(self):
         linha = Linha((10, 10, 50, 50), "black", "")
