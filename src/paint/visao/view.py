@@ -1,3 +1,5 @@
+
+
 import tkinter as tk
 from  modelo.figuras import Linha, Oval, Retangulo, Rabisco, Poligono
 
@@ -8,7 +10,7 @@ class TelaDesenho:
     ela "fofoca" pro controlador resolver.
     """
 
-    def __init__(self, root):
+    def __init__(self, root: tk.Tk) -> None:
         self.root = root
         
         # Só preenchemos isso depois usando o set_controlador()
@@ -39,11 +41,11 @@ class TelaDesenho:
         self.canvas.bind('<Control-c>', self._ao_copiar)
         self.canvas.bind('<Control-v>', self._ao_colar)
 
-    def set_controlador(self, controlador):
+    def set_controlador(self, controlador) -> None:
         """Chamado pelo main pra conectar o cérebro (controlador) na tela"""
         self.controlador = controlador
 
-    def _criar_menus(self):
+    def _criar_menus(self) -> None:
         """Monta a barra de menu superior e os dropdowns na tela."""
         
         # 1. Criação do menu Arquivo (Barra Superior)
@@ -62,9 +64,35 @@ class TelaDesenho:
             command=lambda: self.controlador.salvar_desenho() if self.controlador else None
         )
 
+        ############### Adicionando um menu de organização das camadas de figuras - Etapa 5: Mover figuras para frente e atrás ########################
+        menu_organizar = tk.Menu(barra_menus, tearoff=0)
+        barra_menus.add_cascade(label="Organizar Figuras", menu=menu_organizar)
+        
+        menu_organizar.add_command(
+            label="Mover para Frente",
+            command=lambda: self.controlador.trazer_para_frente() if self.controlador else None
+        )
+        menu_organizar.add_command(
+            label="Mover para Trás",
+            command=lambda: self.controlador.enviar_para_tras() if self.controlador else None
+        )
+        ############################ Finalizando o Menu da etapa 5: movimentação de camadas ############################
+
+        ################### Adicionando o "mover" como uma ferramenta de botão #########################################
+        self.btn_mover = tk.Button(
+            self.frame_controles, 
+            text="Mover Figura", 
+            relief=tk.RAISED,
+            bg="#f0f0f0",
+            command=self._ativar_modo_mover
+        )
+        self.btn_mover.pack(side=tk.LEFT, padx=(0, 20)) # dá um espaçamento maior para separar o botão dos seletores, puramente estetico
+
+        ##################### Finalizando o botão
+
         # 2. Criação dos controles de Ferramentas e Cores (Barra Inferior/Frame)
         # Menu de qual ferramenta estamos usando
-        tk.Label(self.frame_controles, text='Ferramenta:').pack(side=tk.LEFT, padx=(0, 5))
+        tk.Label(self.frame_controles, text='Ferramenta/Figuras:').pack(side=tk.LEFT, padx=(0, 5))
         self.var_ferramenta = tk.StringVar(value='Linha')
         menu_ferramenta = tk.OptionMenu(
             self.frame_controles, self.var_ferramenta,
@@ -95,33 +123,45 @@ class TelaDesenho:
 
     # Callbacks dos menus (Avisando o controlador)
 
-    def _mudar_ferramenta(self, valor):
+    def _mudar_ferramenta(self, valor: str) -> None:
         if self.controlador:
             self.controlador.set_ferramenta(valor)
+## Adicionando o modo de mover como um botão -  Etapa 5: parte de botao visualmente levantado
+            self.btn_mover.config(relief=tk.RAISED, bg="#f0f0f0")
 
-    def _mudar_cor_borda(self, valor):
+    def _ativar_modo_mover(self) -> None:
+        ## chamado ao clicar no botão de Mover e avisa o controlador
+        if self.controlador:
+            self.controlador.set_ferramenta("Mover")
+            # deixa o botão visualmente clicado para mostrar que está ativo
+            self.btn_mover.config(relief=tk.SUNKEN, bg="#ddd")
+## Etapa finalizada!!!
+
+    def _mudar_cor_borda(self, valor: str) -> None:
         if self.controlador:
             self.controlador.set_cor_borda(valor)
 
-    def _mudar_preenchimento(self, valor):
+    def _mudar_preenchimento(self, valor: str) -> None:
         if self.controlador:
             self.controlador.set_cor_preenchimento(valor)
 
     # Eventos do mouse
 
-    def _ao_clicar(self, event):
+    def _ao_clicar(self, event) -> None:
+        ## adicionando essa parte para focar na figura que queremos copiar e colar
+        self.canvas.focus_set()
         if self.controlador:
             self.controlador.ao_clicar(event.x, event.y)
 
-    def _ao_arrastar(self, event):
+    def _ao_arrastar(self, event) -> None:
         if self.controlador:
             self.controlador.ao_arrastar(event.x, event.y)
 
-    def _ao_soltar(self, event):
+    def _ao_soltar(self, event) -> None:
         if self.controlador:
             self.controlador.ao_soltar(event.x, event.y)
 
-    def _ao_duplo_clique(self, event):
+    def _ao_duplo_clique(self, event) -> None:
         # Usado mais pro Polígono, pra saber a hora de fechar a forma
         if self.controlador:
             self.controlador.ao_duplo_clique(event.x, event.y)
@@ -132,8 +172,11 @@ class TelaDesenho:
     # 
     # Esses métodos são chamados quando o usuário aperta Ctrl+C ou Ctrl+V.
     # Eles perguntam pro controlador o que fazer.
+    # 
+    # NOTA: O evento do Tkinter passa um objeto, mas não precisamos dele.
+    # Usamos '_' para ignorar o parâmetro (convenção Python).
 
-    def _ao_copiar(self, evento):
+    def _ao_copiar(self, _evento) -> None:
         """
         Chamado quando o usuário aperta Ctrl+C no canvas.
         Pede pro controlador copiar as figuras selecionadas.
@@ -146,7 +189,7 @@ class TelaDesenho:
             if self.controlador.desenho.figuras:
                 self.controlador.copiar_figuras([self.controlador.desenho.figuras[-1]])
 
-    def _ao_colar(self, evento):
+    def _ao_colar(self, _evento) -> None:
         """
         Chamado quando o usuário aperta Ctrl+V no canvas.
         Pede pro controlador colar o que está no clipboard.
@@ -156,7 +199,7 @@ class TelaDesenho:
 
     # Desenhando na tela de fato
 
-    def atualizar_canvas(self, figuras, figura_nova, poligono_em_construcao):
+    def atualizar_canvas(self, figuras, figura_nova, poligono_em_construcao) -> None:
         """
         O controlador grita "Atualiza!" e a gente refaz o quadro branco.
         """
@@ -176,7 +219,7 @@ class TelaDesenho:
         if poligono_em_construcao:
             self._desenhar_preview_poligono(poligono_em_construcao)
 
-    def _desenhar_figura(self, figura, dash=None):
+    def _desenhar_figura(self, figura, dash=None) -> None:
         """Faz o trabalho sujo de converter as classes do modelo em tinta no Tkinter"""
         
         if isinstance(figura, Linha):
@@ -222,7 +265,7 @@ class TelaDesenho:
                 # Com só 2 pontos, ainda é só uma reta
                 self.canvas.create_line(flat, fill=figura.cor_borda, dash=dash)
 
-    def _desenhar_preview_poligono(self, poligono):
+    def _desenhar_preview_poligono(self, poligono) -> None:
         """Faz a linha guia tracejada acompanhando o clique do usuário no polígono"""
         pontos = poligono.coordenadas
 
