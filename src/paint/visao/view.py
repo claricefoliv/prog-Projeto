@@ -9,7 +9,7 @@ class TelaDesenho:
     ela "fofoca" pro controlador resolver.
     """
 
-    def __init__(self, root: tk.Tk) -> None:
+    def __init__(self, root: tk.Tk):
         self.root = root
         
         # Só preenchemos isso depois usando o set_controlador()
@@ -31,11 +31,11 @@ class TelaDesenho:
         self.canvas.bind('<ButtonRelease-1>', self._ao_soltar)
         self.canvas.bind('<Double-Button-1>', self._ao_duplo_clique)
 
-    def set_controlador(self, controlador) -> None:
+    def set_controlador(self, controlador):
         """Chamado pelo main pra conectar o cérebro (controlador) na tela"""
         self.controlador = controlador
 
-    def _criar_menus(self) -> None:
+    def _criar_menus(self):
         """Monta os dropdowns na tela e já configura quem avisar quando algo mudar"""
         
         # Menu de qual ferramenta estamos usando
@@ -68,45 +68,61 @@ class TelaDesenho:
         )
         menu_preenchimento.pack(side=tk.LEFT)
 
+        # Adicionando botões para Salvar e Abrir projeto JSON
+        tk.Frame(self.frame_controles, width=20).pack(side=tk.LEFT) # Espaçador visual
+        
+        btn_salvar = tk.Button(self.frame_controles, text="Salvar Projeto", command=self._ao_clicar_salvar)
+        btn_salvar.pack(side=tk.LEFT, padx=5)
+
+        btn_abrir = tk.Button(self.frame_controles, text="Abrir Projeto", command=self._ao_clicar_abrir)
+        btn_abrir.pack(side=tk.LEFT, padx=5)
+
     # Callbacks dos menus (Avisando o controlador)
 
-    def _mudar_ferramenta(self, valor: str) -> None:
+    def _mudar_ferramenta(self, valor: str):
         if self.controlador:
             self.controlador.set_ferramenta(valor)
 
-    def _mudar_cor_borda(self, valor: str) -> None:
+    def _mudar_cor_borda(self, valor: str):
         if self.controlador:
             self.controlador.set_cor_borda(valor)
 
-    def _mudar_preenchimento(self, valor: str) -> None:
+    def _mudar_preenchimento(self, valor: str):
         if self.controlador:
             self.controlador.set_cor_preenchimento(valor)
 
+    # Callbacks dos botões de persistência
+    
+    def _ao_clicar_salvar(self):
+        if self.controlador:
+            self.controlador.salvar_desenho()
+
+    def _ao_clicar_abrir(self):
+        if self.controlador:
+            self.controlador.abrir_desenho()
+
     # Eventos do mouse
 
-    def _ao_clicar(self, event) -> None:
+    def _ao_clicar(self, event):
         if self.controlador:
             self.controlador.ao_clicar(event.x, event.y)
 
-    def _ao_arrastar(self, event) -> None:
+    def _ao_arrastar(self, event):
         if self.controlador:
             self.controlador.ao_arrastar(event.x, event.y)
 
-    def _ao_soltar(self, event) -> None:
+    def _ao_soltar(self, event):
         if self.controlador:
             self.controlador.ao_soltar(event.x, event.y)
 
-    def _ao_duplo_clique(self, event) -> None:
+    def _ao_duplo_clique(self, event):
         # Usado mais pro Polígono, pra saber a hora de fechar a forma
         if self.controlador:
             self.controlador.ao_duplo_clique(event.x, event.y)
 
     #  Desenhando na tela de fato
 
-    def atualizar_canvas(self, figuras, figura_nova, poligono_em_construcao) -> None:
-        """
-        O controlador grita "Atualiza!" e a gente refaz o quadro branco.
-        """
+    def atualizar_canvas(self, figuras, figura_nova, poligono_em_construcao):
         self.canvas.delete("all")
 
         # Repassa a limpo tudo que já tá desenhado definitivamente
@@ -123,7 +139,7 @@ class TelaDesenho:
         if poligono_em_construcao:
             self._desenhar_preview_poligono(poligono_em_construcao)
 
-    def _desenhar_figura(self, figura, dash=None) -> None:
+    def _desenhar_figura(self, figura, dash=None):
         """Faz o trabalho sujo de converter as classes do modelo em tinta no Tkinter"""
         
         if isinstance(figura, Linha):
@@ -169,7 +185,7 @@ class TelaDesenho:
                 # Com só 2 pontos, ainda é só uma reta
                 self.canvas.create_line(flat, fill=figura.cor_borda, dash=dash)
 
-    def _desenhar_preview_poligono(self, poligono) -> None:
+    def _desenhar_preview_poligono(self, poligono):
         """Faz a linha guia tracejada acompanhando o clique do usuário no polígono"""
         pontos = poligono.coordenadas
 
