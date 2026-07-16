@@ -40,6 +40,23 @@ class TelaDesenho:
         # Quando o usuário aperta, chamamos o controlador.
         self.canvas.bind('<Control-c>', self._ao_copiar)
         self.canvas.bind('<Control-v>', self._ao_colar)
+        #mudança etapa 5 - parte 6: adicionando o bind do botão direito do mouse para seleção de figuras
+        self.canvas.bind('<Button-3>', self._iniciar_selecao)
+        self.canvas.bind('<B3-Motion>', self._atualizar_selecao)
+        self.canvas.bind('<ButtonRelease-3>', self._finalizar_selecao)
+        #seleção
+    def _iniciar_selecao(self, event):
+      if self.controlador:
+        self.controlador.iniciar_selecao(event.x, event.y)
+
+    def _atualizar_selecao(self, event):
+      if self.controlador:
+        self.controlador.atualizar_selecao(event.x, event.y)
+
+    def _finalizar_selecao(self, event):
+      if self.controlador:
+        self.controlador.finalizar_selecao(event.x, event.y)
+
 
     def set_controlador(self, controlador) -> None:
         """Chamado pelo main pra conectar o cérebro (controlador) na tela"""
@@ -199,11 +216,15 @@ class TelaDesenho:
 
     # Desenhando na tela de fato
 
-    def atualizar_canvas(self, figuras, figura_nova, poligono_em_construcao) -> None:
+    def atualizar_canvas(self, figuras, figura_nova, poligono_em_construcao,figuras_selecionadas,selecao_ativa, inicio_selecao, fim_selecao) -> None:
         """
         O controlador grita "Atualiza!" e a gente refaz o quadro branco.
         """
         self.canvas.delete("all")
+        # mudança da etapa 5 - parte 6: desenha as figuras selecionadas com uma borda mais grossa, foi colocado um parâmetro a mais na função para receber as figuras selecionadas chamado largura
+        for figura in figuras:
+            largura = 3 if figura in figuras_selecionadas else 1
+            self._desenhar_figura(figura, largura=largura)
 
         # Repassa a limpo tudo que já tá desenhado definitivamente
         for figura in figuras:
@@ -218,8 +239,11 @@ class TelaDesenho:
         # Renderiza o "esqueleto" do polígono que o usuário ainda tá clicando
         if poligono_em_construcao:
             self._desenhar_preview_poligono(poligono_em_construcao)
+            #cria o retangulo da selecao
+        if (selecao_ativa and inicio_selecao is not None and fim_selecao is not None):
+             self.canvas.create_rectangle(inicio_selecao[0],inicio_selecao[1],fim_selecao[0],fim_selecao[1],outline="blue",dash=(5, 3))    
 
-    def _desenhar_figura(self, figura, dash=None) -> None:
+    def _desenhar_figura(self, figura, dash=None, largura=1) -> None:
         """Faz o trabalho sujo de converter as classes do modelo em tinta no Tkinter"""
         
         if isinstance(figura, Linha):
@@ -232,7 +256,8 @@ class TelaDesenho:
                 x1, y1, x2, y2,
                 outline=figura.cor_borda,
                 fill=figura.cor_preenchimento,
-                dash=dash
+                dash=dash,
+                width=largura
             )
 
         elif isinstance(figura, Retangulo):
@@ -241,14 +266,15 @@ class TelaDesenho:
                 x1, y1, x2, y2,
                 outline=figura.cor_borda,
                 fill=figura.cor_preenchimento,
-                dash=dash
+                dash=dash,
+                width=largura
             )
 
         elif isinstance(figura, Rabisco):
             # Truque necessário: o rabisco tem tuplas de pontos [(x,y), ...], 
             # mas o create_line precisa de uma lista "achatada" [x, y, x, y].
             flat = [c for ponto in figura.coordenadas for c in ponto]
-            self.canvas.create_line(flat, fill=figura.cor_borda, dash=dash)
+            self.canvas.create_line(flat, fill=figura.cor_borda, dash=dash,width=largura)
 
         elif isinstance(figura, Poligono):
             # Mesmo macete do achatamento de lista do rabisco
@@ -259,7 +285,8 @@ class TelaDesenho:
                     flat,
                     outline=figura.cor_borda,
                     fill=figura.cor_preenchimento,
-                    dash=dash
+                    dash=dash,
+                    width=largura
                 )
             elif len(figura.coordenadas) == 2:
                 # Com só 2 pontos, ainda é só uma reta
