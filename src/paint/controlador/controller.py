@@ -1,3 +1,5 @@
+
+
 """
 Controlador refatorado com Padrão State.
 ANTES (Entrega 3): tinha if/elif self.ferramenta_atual == "Linha": ...
@@ -21,6 +23,7 @@ from controlador.estado import (
     EstadoOval,
     EstadoRetangulo,
     EstadoPoligono,
+    EstadoMover, # adicionando o estado de mover que criamos na etapa 5
 )
 
 if TYPE_CHECKING:
@@ -38,6 +41,7 @@ _ESTADOS = {
     "Oval": EstadoOval(),
     "Retângulo": EstadoRetangulo(),
     "Polígono": EstadoPoligono(),
+    "Mover": EstadoMover(), # adicionando o estado de mover que criamos na etapa 5
 }
 
 
@@ -60,7 +64,9 @@ class ControladorDesenho:
         # Guarda as figuras copiadas temporariamente.
         # É uma lista porque quando a seleção múltipla estiver pronta
         # vamos poder copiar várias figuras de uma vez.
-        self._clipboard = []
+        self._clipboard: list = []
+        ## Mudança da etapa 5 na parte de mover: criamos esse atributo para saber qual figura foi selecionada ao clicarmos na interface
+        self.figura_focada = None
 
     def set_ferramenta(self, ferramenta):
         """Altera o comportamento das ferramentas trocando o objeto de estado."""
@@ -190,4 +196,22 @@ class ControladorDesenho:
             # Lista de tuplas: [(x1,y1), (x2,y2), ...]
             figura.coordenadas = [
                 (x + dx, y + dy) for x, y in figura.coordenadas
-                ]
+            ]
+
+
+    ################# Lógica principal da movimentação para frente e para trás das figuras implementadas - Etapa 5 ######################
+
+    def trazer_para_frente(self):
+        # seguimos uma lógica de mover a figura atualmente focada para a frente, ou seja, no fim de uma lista, via .append
+        if self.figura_focada and self.figura_focada in self.desenho.figuras:
+            self.desenho.figuras.remove(self.figura_focada)
+            self.desenho.figuras.append(self.figura_focada)
+            self._redesenhar()
+
+    def enviar_para_tras(self):
+        # move a figura atualmente focada para o fundo, ou seja, início da lista, via .insert
+        if self.figura_focada and self.figura_focada in self.desenho.figuras:
+            self.desenho.figuras.remove(self.figura_focada)
+            self.desenho.figuras.insert(0, self.figura_focada)
+            self._redesenhar()
+
