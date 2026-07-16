@@ -2,9 +2,9 @@ import tkinter as tk
 
 # MUDANÇA 13: imports ajustados para a estrutura de pacotes MVC
 # cada camada importa do seu pacote: paint.modelo, paint.visao, paint.controlador
-from paint.modelo.figuras import Desenho
-from paint.visao.view import TelaDesenho
-from paint.controlador.controller import ControladorDesenho
+from modelo.figuras import Desenho
+from visao.view import TelaDesenho
+from controlador.controller import ControladorDesenho
 
 
 if __name__ == "__main__":
