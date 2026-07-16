@@ -89,3 +89,44 @@ class TestCicloSalvarAbrir:
         assert figura_2.cor_borda == "red"
         assert figura_2.cor_preenchimento == "yellow”
 
+class TesteNovasFuncionalidades:
+    """Testes para as funcionalidades inseridas na Etapa"""
+    
+    def test_copiar_figura_profundamente(self):
+        """Garante que a cópia não compartilha a mesma referência de memória das coordenadas."""
+        linha_original = Linha((10, 10, 20, 20), "black", "white")
+        linha_copia = linha_original.copiar()
+        
+        # Verifica se os dados são iguais, mas os objetos (espaços na memória) são diferentes
+        assert linha_copia is not linha_original
+        assert linha_copia.coordenadas == linha_original.coordenadas
+        assert linha_copia.cor_borda == linha_original.cor_borda
+
+    def test_gerenciamento_selecao_multipla(self):
+        """Testa se o modelo adiciona e limpa figuras selecionadas corretamente"""
+        desenho = Desenho()
+        figura1 = Oval((0, 0, 10, 10), "red", "")
+        figura2 = Retangulo((20, 20, 30, 30), "blue", "")
+        
+        desenho.adicionar_selecao(figura1)
+        desenho.adicionar_selecao(figura2)
+        
+        assert len(desenho.figuras_selecionadas) == 2
+        assert figura1 in desenho.figuras_selecionadas
+        
+        # Testar se limpar_selecao esvazia a lista sem deletar as figuras reais
+        desenho.limpar_selecao()
+        assert len(desenho.figuras_selecionadas) == 0
+
+    def test_remover_figura(self):
+        """Testa se uma figura é devidamente deletada dos dados principais. """
+        desenho = Desenho()
+        figura = Linha((0, 0, 10, 10), "red", "")
+        desenho.adicionar_figura(figura)
+        
+        assert len(desenho.figuras) == 1
+        desenho.remover_figura(figura)
+        
+        # A lista de figuras principais deve ficar vazia
+        assert len(desenho.figuras) == 0
+
