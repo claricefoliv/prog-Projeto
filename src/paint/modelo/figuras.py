@@ -157,6 +157,14 @@ class Desenho:
             # o indent serve para formatacao do arquivo e o dump serve para fazer a conversao de dados em JSON.
             json.dump(dados_figuras, arquivo, indent=4)
 
+    # Adicionando a função de apagar desenho
+    
+    def remover_figura(self, figura):
+        """Remove a figura selecionada da lista de figuras do desenho."""
+        if figura in self.figuras:
+            self.figuras.remove(figura)
+
+
     def carregar_de_arquivo(self, caminho_arquivo: str) -> None:
         # lê (o r ali significa read) o arquivo JSON e carrega os objetos de figuras da mesma maneira que testado anteriormente na tela
         with open(caminho_arquivo, "r", encoding="utf-8") as arquivo:
