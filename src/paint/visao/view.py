@@ -31,6 +31,8 @@ class TelaDesenho:
         self.canvas.bind('<B1-Motion>', self._ao_arrastar)
         self.canvas.bind('<ButtonRelease-1>', self._ao_soltar)
         self.canvas.bind('<Double-Button-1>', self._ao_duplo_clique)
+        self.canvas.bind('<Delete>', self._ao_apagar)
+        self.canvas.bind('<BackSpace>', self._ao_apagar)
 
         # =========================================================================
         # MUDANÇA ENTREGA 5 — PARTE 3: BIND DE TECLAS PARA COPIAR/COLAR
