@@ -67,6 +67,15 @@ class ControladorDesenho:
         self._clipboard: list = []
         ## Mudança da etapa 5 na parte de mover: criamos esse atributo para saber qual figura foi selecionada ao clicarmos na interface
         self.figura_focada = None
+         #  mudanças da etapa 5: criamos esses atributos para saber se o usuário está selecionando uma área do canvas para selecionar figuras
+        self.selecao_ativa = False 
+        self.inicio_selecao = None 
+        self.fim_selecao = None
+        #selecionar e mover figuras
+        self.movendo = False
+        self.ultimo_x = 0
+        self.ultimo_y = 0
+       
 
     def set_ferramenta(self, ferramenta):
         """Altera o comportamento das ferramentas trocando o objeto de estado."""
@@ -77,29 +86,146 @@ class ControladorDesenho:
 
     def set_cor_preenchimento(self, cor):
         self.cor_preenchimento = cor
+        
+    def iniciar_selecao(self, x, y):
+    
+   # Chamado quando o usuário pressiona o botão direito.
+   # Não interfere no padrão State porque não estamos desenhando / Mudança etapa 5 - parte 6: adicionamos a lógica de seleção de figuras, que é independente do estado atual.
+   # uma figura, apenas iniciando uma região de seleção.
+     self.selecao_ativa = True
+     self.inicio_selecao = (x, y)
+     self.fim_selecao = (x, y)
+     self.desenho.limpar_selecao()
+     self._redesenhar()    
+
+    def atualizar_selecao(self, x, y): # mudança etapa 5 - parte 6: Atualiza a região de seleção enquanto o usuário arrasta o mouse.
+      
+     if not self.selecao_ativa:
+        return
+
+     self.fim_selecao = (x, y)
+     self._redesenhar()
+
+    def finalizar_selecao(self, x, y): # mudança etapa 5: Finaliza a seleção e determina quais figuras estão dentro da região selecionada.
+
+     if not self.selecao_ativa:
+        return
+
+     self.fim_selecao = (x, y)
+
+     self.desenho.limpar_selecao()
+
+     x1 = min(self.inicio_selecao[0], self.fim_selecao[0])
+     y1 = min(self.inicio_selecao[1], self.fim_selecao[1])
+
+     x2 = max(self.inicio_selecao[0], self.fim_selecao[0])
+     y2 = max(self.inicio_selecao[1], self.fim_selecao[1])
+
+    # percorremos todas as figuras procurando quais estão
+    # completamente dentro do retângulo desenhado.
+
+     for figura in self.desenho.figuras:
+
+        if self.figura_dentro_da_area(figura, x1, y1, x2, y2):
+
+            self.desenho.adicionar_selecao(figura)
+
+     self.selecao_ativa = False
+
+     self._redesenhar()
+
+    def figura_dentro_da_area(self, figura, x1, y1, x2, y2): # mudança etapa 5 - parte 6: Verifica se uma figura está completamente dentro da área de seleção.
+     coords = figura.coordenadas
+     if isinstance(coords, tuple): #Linha, Oval, Retângulo
+
+        fx1 = min(coords[0], coords[2])
+        fy1 = min(coords[1], coords[3])
+        fx2 = max(coords[0], coords[2])
+        fy2 = max(coords[1], coords[3])
+
+        return (fx1 >= x1 and fy1 >= y1 and fx2 <= x2 and fy2 <= y2)    
+     else:# Rabisco, Polígono
+
+        xs = [p[0] for p in coords]
+        ys = [p[1] for p in coords]
+
+        return (min(xs) >= x1 and min(ys) >= y1 and max(xs) <= x2 and max(ys) <= y2)
+
 
     # =========================================================================
     # EVENTOS DO MOUSE (DELEGADOS DIRETAMENTE PARA O ESTADO CORRENTE)
     # =========================================================================
     
     def ao_clicar(self, x, y):
+        # Verifica se o clique foi em alguma figura selecionada
+        for figura in self.desenho.figuras_selecionadas:
+         if self.clique_dentro_da_figura(figura, x, y):
+            self.movendo = True
+            self.ultimo_x = x
+            self.ultimo_y = y
+            return
         self.estado_atual.ao_clicar(self, x, y)
 
     def ao_arrastar(self, x, y):
+        # Se estamos movendo figuras selecionadas
+     if self.movendo:
+        dx = x - self.ultimo_x
+        dy = y - self.ultimo_y
+        self.mover_figuras_selecionadas(dx, dy)
+        self.ultimo_x = x
+        self.ultimo_y = y
         self.estado_atual.ao_arrastar(self, x, y)
+        return
+    # Caso contrário continua desenhando normalmente
+    self.estado_atual.ao_arrastar(self, x, y)
 
     def ao_soltar(self, x, y):
-        self.estado_atual.ao_soltar(self, x, y)
+        # Se estava movendo, apenas finaliza o movimento
+     if self.movendo:
+        self.movendo = False
+        return
+
+    # Caso contrário continua o comportamento da ferramenta atual
+    self.estado_atual.ao_soltar(self, x, y)
 
     def ao_duplo_clique(self, x, y):
         self.estado_atual.duplo_clique(self, x, y)
+
+    #clicar dentro da figura para selecionar a figura e mover ela
+    def clique_dentro_da_figura(self, figura, x, y):
+
+     coords = figura.coordenadas
+
+     if isinstance(coords, tuple):
+
+        fx1 = min(coords[0], coords[2])
+        fy1 = min(coords[1], coords[3])
+        fx2 = max(coords[0], coords[2])
+        fy2 = max(coords[1], coords[3])
+
+     else:
+
+        xs = [p[0] for p in coords]
+        ys = [p[1] for p in coords]
+
+        fx1 = min(xs)
+        fy1 = min(ys)
+        fx2 = max(xs)
+        fy2 = max(ys)
+
+     return fx1 <= x <= fx2 and fy1 <= y <= fy2    
+
 
     def _redesenhar(self):
         """Informa a visão para atualizar a exibição das figuras no canvas."""
         self.tela.atualizar_canvas(
             self.desenho.figuras,
             self.desenho.figura_nova,
-            self.poligono_em_construcao
+            self.poligono_em_construcao,
+            self.desenho.figuras_selecionadas, #
+            self.selecao_ativa,                # Adicionado na etapa 5 - parte 6: passamos para a visão se a seleção está ativa e as coordenadas da seleção
+            self.inicio_selecao,               #
+            self.fim_selecao                   #
         )
 
     # =========================================================================
@@ -198,7 +324,13 @@ class ControladorDesenho:
                 (x + dx, y + dy) for x, y in figura.coordenadas
             ]
 
+   def mover_figuras_selecionadas(self, dx, dy): #Move todas as figuras atualmente selecionadas.
 
+        for figura in self.desenho.figuras_selecionadas:
+            self._deslocar_figura(figura, dx, dy)
+
+        self._redesenhar()
+       
     ################# Lógica principal da movimentação para frente e para trás das figuras implementadas - Etapa 5 ######################
 
     def trazer_para_frente(self):
