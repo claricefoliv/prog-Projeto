@@ -156,13 +156,23 @@ class TelaDesenho:
             self.btn_mover.config(relief=tk.SUNKEN, bg="#ddd")
 ## Etapa finalizada!!!
 
-    def _mudar_cor_borda(self, valor: str) -> None:
-        if self.controlador:
-            self.controlador.set_cor_borda(valor)
+    def _set_cor_borda(self, cor):
+        """Atualiza a cor da borda futura e altera a cor da figura atualmente focada, se houver."""
+        self.cor_borda = cor
+        
+        # Se o usuário clicou em uma figura com a ferramenta "Mover" (focando nela), mudamos a cor dela
+        if self.controlador.figura_focada:
+            self.controlador.figura_focada.cor_borda = cor
+            self.controlador._redesenhar()
 
-    def _mudar_preenchimento(self, valor: str) -> None:
-        if self.controlador:
-            self.controlador.set_cor_preenchimento(valor)
+    def _set_cor_preenchimento(self, cor):
+        """Atualiza a cor de preenchimento futura e altera a cor da figura atualmente focada, se houver."""
+        self.cor_preenchimento = cor
+        
+        # Se o usuário clicou em uma figura com a ferramenta "Mover" (focando nela), mudamos a cor dela
+        if self.controlador.figura_focada:
+            self.controlador.figura_focada.cor_preenchimento = cor
+            self.controlador._redesenhar()
 
     # Eventos do mouse
 
