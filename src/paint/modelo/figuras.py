@@ -140,6 +140,17 @@ class Desenho:
         # permanece gerenciando a lista de figuras criadas
         self.figuras = []
         self.figura_nova = None
+   # NOVO: Selecionar figuras 
+        # guarda todas as figuras atualmente selecionadas
+        self.figuras_selecionadas = []
+    #NOVO 
+    def limpar_selecao(self):
+        self.figuras_selecionadas.clear()
+    #NOVO
+    def adicionar_selecao(self, figura):
+        if figura not in self.figuras_selecionadas:
+            self.figuras_selecionadas.append(figura)
+     
 
     def adicionar_figura(self, figura):
         self.figuras.append(figura)
