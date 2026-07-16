@@ -1,6 +1,5 @@
 import tkinter as tk
-
-from paint.modelo.figuras import Linha, Oval, Retangulo, Rabisco, Poligono
+from  modelo.figuras import Linha, Oval, Retangulo, Rabisco, Poligono
 
 class TelaDesenho:
     """
@@ -9,7 +8,7 @@ class TelaDesenho:
     ela "fofoca" pro controlador resolver.
     """
 
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root):
         self.root = root
         
         # Só preenchemos isso depois usando o set_controlador()
@@ -31,13 +30,39 @@ class TelaDesenho:
         self.canvas.bind('<ButtonRelease-1>', self._ao_soltar)
         self.canvas.bind('<Double-Button-1>', self._ao_duplo_clique)
 
+        # =========================================================================
+        # MUDANÇA ENTREGA 5 — PARTE 3: BIND DE TECLAS PARA COPIAR/COLAR
+        # =========================================================================
+        # Capturamos Ctrl+C e Ctrl+V no canvas.
+        # O Tkinter usa '<Control-c>' (com hífen) para o atalho.
+        # Quando o usuário aperta, chamamos o controlador.
+        self.canvas.bind('<Control-c>', self._ao_copiar)
+        self.canvas.bind('<Control-v>', self._ao_colar)
+
     def set_controlador(self, controlador):
         """Chamado pelo main pra conectar o cérebro (controlador) na tela"""
         self.controlador = controlador
 
     def _criar_menus(self):
-        """Monta os dropdowns na tela e já configura quem avisar quando algo mudar"""
+        """Monta a barra de menu superior e os dropdowns na tela."""
         
+        # 1. Criação do menu Arquivo (Barra Superior)
+        barra_menus = tk.Menu(self.root)
+        self.root.config(menu=barra_menus)
+
+        menu_arquivo = tk.Menu(barra_menus, tearoff=0)
+        barra_menus.add_cascade(label="Arquivo", menu=menu_arquivo)
+        
+        menu_arquivo.add_command(
+            label="Abrir", 
+            command=lambda: self.controlador.abrir_desenho() if self.controlador else None
+        )
+        menu_arquivo.add_command(
+            label="Salvar", 
+            command=lambda: self.controlador.salvar_desenho() if self.controlador else None
+        )
+
+        # 2. Criação dos controles de Ferramentas e Cores (Barra Inferior/Frame)
         # Menu de qual ferramenta estamos usando
         tk.Label(self.frame_controles, text='Ferramenta:').pack(side=tk.LEFT, padx=(0, 5))
         self.var_ferramenta = tk.StringVar(value='Linha')
@@ -68,38 +93,19 @@ class TelaDesenho:
         )
         menu_preenchimento.pack(side=tk.LEFT)
 
-        # Adicionando botões para Salvar e Abrir projeto JSON
-        tk.Frame(self.frame_controles, width=20).pack(side=tk.LEFT) # Espaçador visual
-        
-        btn_salvar = tk.Button(self.frame_controles, text="Salvar Projeto", command=self._ao_clicar_salvar)
-        btn_salvar.pack(side=tk.LEFT, padx=5)
-
-        btn_abrir = tk.Button(self.frame_controles, text="Abrir Projeto", command=self._ao_clicar_abrir)
-        btn_abrir.pack(side=tk.LEFT, padx=5)
-
     # Callbacks dos menus (Avisando o controlador)
 
-    def _mudar_ferramenta(self, valor: str):
+    def _mudar_ferramenta(self, valor):
         if self.controlador:
             self.controlador.set_ferramenta(valor)
 
-    def _mudar_cor_borda(self, valor: str):
+    def _mudar_cor_borda(self, valor):
         if self.controlador:
             self.controlador.set_cor_borda(valor)
 
-    def _mudar_preenchimento(self, valor: str):
+    def _mudar_preenchimento(self, valor):
         if self.controlador:
             self.controlador.set_cor_preenchimento(valor)
-
-    # Callbacks dos botões de persistência
-    
-    def _ao_clicar_salvar(self):
-        if self.controlador:
-            self.controlador.salvar_desenho()
-
-    def _ao_clicar_abrir(self):
-        if self.controlador:
-            self.controlador.abrir_desenho()
 
     # Eventos do mouse
 
@@ -120,9 +126,40 @@ class TelaDesenho:
         if self.controlador:
             self.controlador.ao_duplo_clique(event.x, event.y)
 
-    #  Desenhando na tela de fato
+    # =========================================================================
+    # CALLBACKS DE COPIAR/COLAR (ENTREGA 5 — PARTE 3)
+    # =========================================================================
+    # 
+    # Esses métodos são chamados quando o usuário aperta Ctrl+C ou Ctrl+V.
+    # Eles perguntam pro controlador o que fazer.
+
+    def _ao_copiar(self, evento):
+        """
+        Chamado quando o usuário aperta Ctrl+C no canvas.
+        Pede pro controlador copiar as figuras selecionadas.
+        """
+        if self.controlador:
+            # POR ENQUANTO: como a seleção múltipla ainda não está pronta,
+            # copiamos a última figura desenhada para testar.
+            # Quando a seleção estiver integrada, trocamos para
+            # passar as figuras selecionadas.
+            if self.controlador.desenho.figuras:
+                self.controlador.copiar_figuras([self.controlador.desenho.figuras[-1]])
+
+    def _ao_colar(self, evento):
+        """
+        Chamado quando o usuário aperta Ctrl+V no canvas.
+        Pede pro controlador colar o que está no clipboard.
+        """
+        if self.controlador:
+            self.controlador.colar()
+
+    # Desenhando na tela de fato
 
     def atualizar_canvas(self, figuras, figura_nova, poligono_em_construcao):
+        """
+        O controlador grita "Atualiza!" e a gente refaz o quadro branco.
+        """
         self.canvas.delete("all")
 
         # Repassa a limpo tudo que já tá desenhado definitivamente
