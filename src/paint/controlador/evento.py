@@ -234,3 +234,68 @@ class EstadoPoligono(EstadoBase):
         ctrl.poligono_em_construcao = None
         ctrl.desenho.limpar_figura_nova()
         ctrl._redesenhar()
+
+
+################### Adicionando a funcioonalidade de mover a figura da etapa 5 ###############################
+
+class EstadoMover(EstadoBase):
+    # adicionando mais uma classe no estado que lida com a seleção e o arrasto de figuras existentes
+    def __init__(self):
+        # inicializa sem nenhum resquicio de figura
+        self.figura_selecionada = None
+        # grava as coordenadas em seguida 
+        self.ultimo_x = 0
+        self.ultimo_y = 0
+
+## idealmente essa parte estava no modelo mas seguimos a ideia de armazenamento de dados e controle de funcoes do estilo MVC à risca, então a def figura_contem_ponto está novamente aqui
+    def _figura_contem_ponto(self, figura, px, py):
+        # verifica localmente se o clique (px, py) atingiu os limites da figura, atendendo aos requisitos de selecao da figura
+        if isinstance(figura.coordenadas, tuple):
+            # para linha, oval e retângulo
+            x1, y1, x2, y2 = figura.coordenadas
+            min_x = min(x1, x2)
+            max_x = max(x1, x2)
+            min_y = min(y1, y2)
+            max_y = max(y1, y2)
+        else:
+            # para rabisco e polígono
+            todos_x = [ponto[0] for ponto in figura.coordenadas]
+            todos_y = [ponto[1] for ponto in figura.coordenadas]
+            min_x = min(todos_x)
+            max_x = max(todos_x)
+            min_y = min(todos_y)
+            max_y = max(todos_y)
+        
+        # retorna true se o clique estiver dentro das extremidades com margem de erro de 5 pixels
+        return (min_x - 5 <= px <= max_x + 5) and (min_y - 5 <= py <= max_y + 5)
+
+    def ao_clicar(self, ctrl, x, y):
+        self.figura_selecionada = None  
+        # percorre as figuras de trás para frente e prioriza as que estão no topo 
+        for fig in reversed(ctrl.desenho.figuras):
+            if self._figura_contem_ponto(fig, x, y):
+                self.figura_selecionada = fig
+                self.ultimo_x = x
+                self.ultimo_y = y
+                
+                # guarda qual é a figura atualmente selecionada/focada para que possamos usar as funções de trazer para frente ou enviar para trás
+                ctrl.figura_focada = fig
+                break
+
+    def ao_arrastar(self, ctrl, x, y):
+        if self.figura_selecionada:
+            # calcula o deslocamento do mouse 
+            dx = x - self.ultimo_x
+            dy = y - self.ultimo_y
+            # reutilização implementada: usamos a função _deslocar_figura que ja existe no controlador!!!! isso faz com que criemos um tipo de reutilizacao "interarquival", evitando o uso de 
+            # codigo duplicado. isso só é possivel pois o estado e o controller fazem parte de somente um controlador (pasta).
+            ctrl._deslocar_figura(self.figura_selecionada, dx, dy)
+            # atualiza a última posição registrada do mouse
+            self.ultimo_x = x
+            self.ultimo_y = y
+            # pede para o controlador redesenhar o canvas
+            ctrl._redesenhar()
+
+    def ao_soltar(self, ctrl, x, y):
+        # soltou o mouse, limpa a seleção de arrasto, possibilitando repetir a ação
+        self.figura_selecionada = None
