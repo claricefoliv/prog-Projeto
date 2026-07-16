@@ -177,7 +177,7 @@ class ControladorDesenho:
         self.estado_atual.ao_arrastar(self, x, y)
         return
     # Caso contrário continua desenhando normalmente
-    self.estado_atual.ao_arrastar(self, x, y)
+     self.estado_atual.ao_arrastar(self, x, y)
 
     def ao_soltar(self, x, y):
         # Se estava movendo, apenas finaliza o movimento
@@ -186,7 +186,7 @@ class ControladorDesenho:
         return
 
     # Caso contrário continua o comportamento da ferramenta atual
-    self.estado_atual.ao_soltar(self, x, y)
+     self.estado_atual.ao_soltar(self, x, y)
 
     def ao_duplo_clique(self, x, y):
         self.estado_atual.duplo_clique(self, x, y)
@@ -324,7 +324,7 @@ class ControladorDesenho:
                 (x + dx, y + dy) for x, y in figura.coordenadas
             ]
 
-   def mover_figuras_selecionadas(self, dx, dy): #Move todas as figuras atualmente selecionadas.
+    def mover_figuras_selecionadas(self, dx, dy): #Move todas as figuras atualmente selecionadas.
 
         for figura in self.desenho.figuras_selecionadas:
             self._deslocar_figura(figura, dx, dy)
