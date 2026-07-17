@@ -189,7 +189,8 @@ class Desenho:
             "Oval": Oval,
             "Retangulo": Retangulo,
             "Rabisco": Rabisco,
-            "Poligono": Poligono
+            "Poligono": Poligono,
+            "GrupoFiguras": GrupoFiguras
         }
         
         for dados in dados_figuras:
@@ -201,4 +202,93 @@ class Desenho:
                 self.adicionar_figura(figura_reconstruida)
 
 
+
+####################################### MUDANÇA 6 -  COMPOSITE ##################################################
+## a ideia do padrão composite é tratar tudo que é selecionado como uma única figura, gerenciando as ações implementadas para todo esse grupo. seguimos com a lógica de listas que utilizamos em todo o projeto, 
+## determinando as ações para conjuntos de listas.
+
+class GrupoFiguras(Figuras):
+ # método aplicado para determinar as caracteristicas nas figuras 
+    def __init__(self, figuras_iniciais=None, cor_borda="black", cor_preenchimento=""):
+        super().__init__([], cor_borda, cor_preenchimento)
+        self.figuras = figuras_iniciais if figuras_iniciais else []
+ # adicionamos a figura a uma lista de elementos para fazer funcionar a seleção grupal
+    def adicionar(self, figura):
+        if figura not in self.figuras:
+            self.figuras.append(figura)
+# aqui removemos alguma figura de dentro do conjunto
+    def remover(self, figura):
+        if figura in self.figuras:
+            self.figuras.remove(figura)
+
+## esse @property permite que a gente agrupe um metodo em um atributo puramente gerenciado, tratando como se fossem variaveis comuns
+    @property
+    def coordenadas(self):
+        ## retorna a caixa envolvente (chamada bounding box) de todas as figuras do grupo.
+        if not self.figuras:
+            return (0, 0, 0, 0)
+        
+        todos_x = []
+        todos_y = []
+        for fig in self.figuras:
+            coords = fig.coordenadas
+            if isinstance(coords, tuple):
+                todos_x.extend([coords[0], coords[2]])
+                todos_y.extend([coords[1], coords[3]])
+            else:
+                todos_x.extend([p[0] for p in coords])
+                todos_y.extend([p[1] for p in coords])
+                
+        return (min(todos_x), min(todos_y), max(todos_x), max(todos_y))
+## caracteristicas normais vistas anteriormente
+    def set_cor_borda(self, cor):
+        self.cor_borda = cor
+        for fig in self.figuras:
+            if isinstance(fig, GrupoFiguras):
+                fig.set_cor_borda(cor)
+            else:
+                fig.cor_borda = cor
+
+    def set_cor_preenchimento(self, cor):
+        self.cor_preenchimento = cor
+        for fig in self.figuras:
+            if isinstance(fig, GrupoFiguras):
+                fig.set_cor_preenchimento(cor)
+            else:
+                fig.cor_preenchimento = cor
+
+    def copiar(self):
+        """Copia profunda do grupo e de todos os seus membros."""
+        subfiguras_copiadas = [fig.copiar() for fig in self.figuras]
+        return GrupoFiguras(subfiguras_copiadas, self.cor_borda, self.cor_preenchimento)
+
+    def to_dict(self):
+        """Serialização recursiva para salvar no JSON."""
+        return {
+            "tipo": "GrupoFiguras",
+            "cor_borda": self.cor_borda,
+            "cor_preenchimento": self.cor_preenchimento,
+            "figuras": [fig.to_dict() for fig in self.figuras]
+        }
+
+## esse classmethod transforma um metodo qualquer em um metodo de classe
+    @classmethod
+    def from_dict(cls, dados: dict):
+        # mapeamento dinâmico para reconstruir as subfiguras internas
+## dicionario para conseguir utilizar as ferramentas
+        mapeamento = {
+            "Linha": Linha, "Oval": Oval, "Retangulo": Retangulo,
+            "Rabisco": Rabisco, "Poligono": Poligono, "GrupoFiguras": GrupoFiguras
+        }
+        figuras_reconstitudas = []
+        for d in dados["figuras"]:
+            classe_fig = mapeamento.get(d["tipo"])
+            if classe_fig:
+                figuras_reconstitudas.append(classe_fig.from_dict(d))
+                
+        return cls(
+            figuras_iniciais=figuras_reconstitudas,
+            cor_borda=dados["cor_borda"],
+            cor_preenchimento=dados["cor_preenchimento"]
+        )
 
