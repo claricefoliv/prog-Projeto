@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 # Importamos o modelo
-from modelo.figuras import Desenho, Poligono, Linha, Oval, Retangulo, Rabisco
+from modelo.figuras import Desenho, Poligono, Linha, Oval, Retangulo, Rabisco, GrupoFiguras
 
 # Importamos do tkinter para as janelas de Salvar/Abrir
 from tkinter import messagebox
@@ -360,4 +360,58 @@ class ControladorDesenho:
             
             # Pede para a tela se atualizar sem a figura
             self._redesenhar()
+
+    
+    ###################### OPERAÇÕES DO COMPOSITE (AGRUPAR/DESAGRUPAR): ETAPA 6 ############################
+
+    def agrupar_selecionadas(self):
+        ## agrupa todas as figuras atualmente selecionadas em um único Composite!!!
+        if len(self.desenho.figuras_selecionadas) < 2:
+            messagebox.showwarning("Aviso", "Selecione pelo menos 2 figuras para agrupar.")
+            return
+
+        # cria o grupo contendo as figuras selecionadas
+        grupo = GrupoFiguras(
+            figuras_iniciais=list(self.desenho.figuras_selecionadas),
+            cor_borda=self.cor_borda,
+            cor_preenchimento=self.cor_preenchimento
+        )
+
+        # remove as figuras individuais do canvas principal
+        for fig in self.desenho.figuras_selecionadas:
+            self.desenho.remover_figura(fig)
+
+        # adiciona o grupo recém-criado como uma única entidade
+        self.desenho.adicionar_figura(grupo)
+
+        # limpa as seleções antigas e foca no grupo criado
+        self.desenho.limpar_selecao()
+        self.desenho.adicionar_selecao(grupo)
+        self.figura_focada = grupo
+
+        self._redesenhar()
+        messagebox.showinfo("Sucesso", "Figuras agrupadas com sucesso!")
+
+    def desagrupar_selecionada(self):
+        # desfaz o grupo selecionado, devolvendo as figuras originais ao canvas.
+        grupos_para_desfazer = [fig for fig in self.desenho.figuras_selecionadas if isinstance(fig, GrupoFiguras)]
+
+        if not grupos_para_desfazer:
+            messagebox.showwarning("Aviso", "A figura selecionada não é um grupo.")
+            return
+
+        for grupo in grupos_para_desfazer:
+            # devolve as subfiguras de volta para o desenho principal
+            for fig in grupo.figuras:
+                self.desenho.adicionar_figura(fig)
+                self.desenho.adicionar_selecao(fig)
+
+            # remove o grupo do canvas e limpa a seleção dele
+            self.desenho.remover_figura(grupo)
+            self.desenho.figuras_selecionadas.remove(grupo)
+            if self.figura_focada == grupo:
+                self.figura_focada = None
+
+        self._redesenhar()
+        messagebox.showinfo("Sucesso", "Grupo desfeito com sucesso!")
 
