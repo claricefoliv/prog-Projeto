@@ -97,6 +97,19 @@ class TelaDesenho:
         )
         ############################ Finalizando o Menu da etapa 5: movimentação de camadas ############################
 
+        ################# MUDANÇA PARA O COMPOSITE ###########################
+        menu_organizar.add_separator()
+        menu_organizar.add_command(
+            label="Agrupar Figuras",
+            command=lambda: self.controlador.agrupar_selecionadas() if self.controlador else None
+        )
+        menu_organizar.add_command(
+            label="Desagrupar Figuras",
+            command=lambda: self.controlador.desagrupar_selecionada() if self.controlador else None
+        )
+
+        ##################### FINAL DE MUDANÇA PARA O COMPOSITE: ETAPA 6 ###################################
+
         ################### Adicionando o "mover" como uma ferramenta de botão #########################################
         self.btn_mover = tk.Button(
             self.frame_controles, 
@@ -126,7 +139,7 @@ class TelaDesenho:
         menu_cor = tk.OptionMenu(
             self.frame_controles, self.var_cor_borda,
             'black', 'red', 'blue', 'green', 'orange', 'purple',
-            command=self._set_cor_borda
+            command = self._mudar_cor_borda
         )
         menu_cor.pack(side=tk.LEFT, padx=(0, 15))
 
@@ -136,7 +149,7 @@ class TelaDesenho:
         menu_preenchimento = tk.OptionMenu(
             self.frame_controles, self.var_preenchimento,
             '', 'red', 'blue', 'green', 'yellow', 'orange', 'purple',
-            command=self._set_cor_preenchimento
+            command=self._mudar_preenchimento
         )
         menu_preenchimento.pack(side=tk.LEFT)
 
@@ -156,8 +169,7 @@ class TelaDesenho:
             self.btn_mover.config(relief=tk.SUNKEN, bg="#ddd")
 ## Etapa finalizada!!!
 
-###### MUDANÇA AQUI!!!!! ETAPA 5: ALTERAMOS NOVAMENTE PARA _MUDAR_COR_BORDA ##### 
-    ## agora conseguimos mudar a cor de todas as figuras!
+## MUDANÇA AQUI!!!!! ETAPA 5: ALTERAMOS NOVAMENTE PARA _MUDAR_COR_BORDA
     def _mudar_cor_borda(self, valor: str) -> None:
         # avisa o controlador que o usuário escolheu uma nova cor de borda
         if self.controlador:
@@ -169,7 +181,6 @@ class TelaDesenho:
             self.controlador.set_cor_preenchimento(valor)
 
     # Eventos do mouse
-
     def _ao_clicar(self, event) -> None:
         ## adicionando essa parte para focar na figura que queremos copiar e colar
         self.canvas.focus_set()
@@ -252,9 +263,24 @@ class TelaDesenho:
     def _desenhar_figura(self, figura, dash=None, largura=1) -> None:
         """Faz o trabalho sujo de converter as classes do modelo em tinta no Tkinter"""
         
-        if isinstance(figura, Linha):
-            x1, y1, x2, y2 = figura.coordenadas
-            self.canvas.create_line(x1, y1, x2, y2, fill=figura.cor_borda, dash=dash)
+        from modelo.figuras import GrupoFiguras
+        if isinstance(figura, GrupoFiguras):
+            for sub_fig in figura.figuras:
+                # Se a subfigura for desenhada como parte do grupo, ela herda temporariamente
+                # as cores do grupo para garantir uma renderização visual perfeitamente unificada
+                cor_borda_original = sub_fig.cor_borda
+                cor_preenchimento_original = sub_fig.cor_preenchimento
+                
+                sub_fig.cor_borda = figura.cor_borda
+                sub_fig.cor_preenchimento = figura.cor_preenchimento
+                
+                # Desenha a subfigura recursivamente
+                self._desenhar_figura(sub_fig, dash=dash, largura=largura)
+                
+                # Restaura as cores originais da subfigura para não estragar os dados do modelo
+                sub_fig.cor_borda = cor_borda_original
+                sub_fig.cor_preenchimento = cor_preenchimento_original
+            return
 
         elif isinstance(figura, Oval):
             x1, y1, x2, y2 = figura.coordenadas
